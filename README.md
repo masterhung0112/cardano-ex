@@ -1,9 +1,17 @@
-Run cardano node for testnet
+## Environment variables
 
 ```sh
 export CARDANO_ROOT=/mnt/hungdata/home/hung/cardano
 export CARDANO_NODE_SOCKET_PATH="$CARDANO_ROOT/db/node.socket"
 
+export KEYNAME=payment1 
+export STAKE_KEYNAME=stake1
+export VOTING_KEYNAME=vote1
+```
+
+## Run cardano node for testnet
+
+```sh
 cardano-node run \
 --config $CARDANO_ROOT/testnet-config.json \
 --database-path $CARDANO_ROOT/db/ \
@@ -11,11 +19,18 @@ cardano-node run \
 --host-addr 127.0.0.1 \
 --port 1337 \
 --topology $CARDANO_ROOT/testnet-topology.json
-``
+```
 
-## Generate payment key-pair
+## Generate all key
+
+- Generate payment key
+- Generate stake key
+- Generate Voting key
+
+### Generate payment key-pair
+Use cardano-cli to generate key
+
 ```sh
-export KEYNAME=payment2 
 cardano-cli address key-gen \
 --verification-key-file $CARDANO_ROOT/keys/$KEYNAME.vkey \
 --signing-key-file $CARDANO_ROOT/keys/KEYNAME.skey
@@ -31,9 +46,8 @@ cardano-cli address build \
 --testnet-magic 1097911063
 ```
 
-Generate stake address
+### Generate stake address
 ```sh
-export STAKE_KEYNAME=stake1
 cardano-cli stake-address key-gen \
     --verification-key-file $CARDANO_ROOT/keys/$STAKE_KEYNAME.vkey \
     --signing-key-file $CARDANO_ROOT/keys/$STAKE_KEYNAME.skey
@@ -42,6 +56,17 @@ cardano-cli stake-address build \
     --out-file $CARDANO_ROOT/keys/$STAKE_KEYNAME.addr \
     --testnet-magic 1097911063
 ```
+### Generate Voting key
+
+```sh
+jcli key generate \
+    --type ed25519extended \
+    > $VOTING_KEYNAME.skey
+jcli key to-public \
+    < $VOTING_KEYNAME.skey \
+    > $VOTING_KEYNAME.pub
+```
+
 ## Check if the address have ADA
 
 ```sh

@@ -3,6 +3,7 @@
 ```sh
 export CARDANO_ROOT=/mnt/hungdata/home/hung/cardano
 export CARDANO_NODE_SOCKET_PATH="$CARDANO_ROOT/db/node.socket"
+export NETWORK_ID="--testnet-magic 1097911063"
 
 export KEYNAME=payment1 
 export STAKE_KEYNAME=stake1
@@ -39,7 +40,6 @@ cardano-cli address key-gen \
 Get the wallet address
 
 ```sh
-export KEYNAME=payment2 
 cardano-cli address build \
 --payment-verification-key-file $CARDANO_ROOT/keys/$KEYNAME.vkey \
 --out-file $CARDANO_ROOT/keys/$KEYNAME.addr \
@@ -70,7 +70,7 @@ jcli key to-public \
 ## Check if the address have ADA
 
 ```sh
-cardano-cli query utxo --testnet-magic 1097911063 --address $(cat ./payment1.addr)
+cardano-cli query utxo --testnet-magic 1097911063 --address $(cat $CARDANO_ROOT/keys/$KEYNAME.addr)
 ```
 
 # Generating vote registration transaction metadata
@@ -78,14 +78,12 @@ Firstly, you need to generate key and address for staking and payment.
 
 From here, we generate our vote registration, encoded in transaction metadata:
 ```sh
-export NETWORK_ID="--testnet-magic 1097911063"
 export SLOT_TIP=$(cardano-cli query tip $NETWORK_ID | jq '.slot')
 export PAYMENT_ADDR=$(cat $CARDANO_ROOT/keys/$KEYNAME.addr)
-export STAKE_KEYNAME=stake1
 
 voter-registration \
     --rewards-address $(cat $CARDANO_ROOT/keys/$STAKE_KEYNAME.addr) \
-    --vote-public-key-file $CARDANO_ROOT/keys/vote.pub \
+    --vote-public-key-file $CARDANO_ROOT/keys/$VOTING_KEYNAME.pub \
     --stake-signing-key-file $CARDANO_ROOT/keys/$STAKE_KEYNAME.skey \
     --slot-no $SLOT_TIP \
     --json > voting-registration-metadata.json
@@ -105,7 +103,7 @@ cardano-cli transaction build  \
 	$NETWORK_ID \
 	--tx-in $UTXO#$UTXO_TXIX \
 	--change-address $PAYMENT_ADDR \
-	--metadata-json-file metadata.json \
+	--metadata-json-file voting-registration-metadata.json \
 	--protocol-params-file protocol.json  \
 	--out-file ${KEYNAME}_tx.raw
 ```
